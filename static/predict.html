@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forecast Tool — SalesCast</title>
+    <meta name="description" content="Enter a Shop ID and Item ID to get the predicted November 2015 sales forecast.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/predict.css">
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="/" class="nav-logo">SalesCast<span class="logo-dot">.</span></a>
+            <a href="/" class="nav-back">← Back to Home</a>
+        </div>
+    </nav>
+
+    <!-- MAIN -->
+    <main class="main">
+        <div class="page-layout">
+
+            <!-- LEFT PANEL: INFO -->
+            <aside class="info-panel">
+                <div class="info-header">
+                    <div class="info-badge">Forecasting Engine</div>
+                    <h1 class="info-title">Sales Prediction<br>for November 2015</h1>
+                    <p class="info-desc">
+                        Enter a Shop ID and Item ID from the 1C Company dataset. The model will retrieve pre-computed features and run XGBoost inference to return the expected unit sales.
+                    </p>
+                </div>
+
+                <div class="info-notes">
+                    <div class="note">
+                        <div class="note-icon">📦</div>
+                        <div>
+                            <div class="note-title">Model</div>
+                            <div class="note-text">XGBoost Regressor with lag &amp; mean-encoded features</div>
+                        </div>
+                    </div>
+                    <div class="note">
+                        <div class="note-icon">🗓️</div>
+                        <div>
+                            <div class="note-title">Forecast Period</div>
+                            <div class="note-text">November 2015 (month 34 in the dataset)</div>
+                        </div>
+                    </div>
+                    <div class="note">
+                        <div class="note-icon">🏪</div>
+                        <div>
+                            <div class="note-title">Valid Shop IDs</div>
+                            <div class="note-text">2, 3, 4, 5, 6, 7, 10, 12, 14, 15, 16, 18, 19, 21, 22, 24, 25, 26, 28, 31, 34–39, 41, 42, 44–50, 52, 53, 55–59</div>
+                        </div>
+                    </div>
+                    <div class="note">
+                        <div class="note-icon">🏷️</div>
+                        <div>
+                            <div class="note-title">Sample Item IDs</div>
+                            <div class="note-text">5037, 5320, 5233, 4806, 30, 31, 32, 64, 464, 560, 978, 1413, 9355</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- RIGHT PANEL: TOOL -->
+            <section class="tool-panel">
+                <div class="tool-card">
+                    <div class="tool-header">
+                        <h2 class="tool-title">Generate Forecast</h2>
+                        <p class="tool-subtitle">Results are returned instantly from the trained model.</p>
+                    </div>
+
+                    <form id="prediction-form" class="tool-form">
+                        <div class="field">
+                            <label for="shop_id">Shop ID</label>
+                            <input type="number" id="shop_id" name="shop_id" placeholder="e.g. 5" required min="0" max="100" autocomplete="off">
+                            <span class="field-hint">Integer between 0–59</span>
+                        </div>
+                        <div class="field">
+                            <label for="item_id">Item ID</label>
+                            <input type="number" id="item_id" name="item_id" placeholder="e.g. 5037" required min="0" max="25000" autocomplete="off">
+                            <span class="field-hint">Integer between 0–25000</span>
+                        </div>
+                        <button type="submit" id="submit-btn">
+                            <span class="btn-text">Run Forecast</span>
+                            <div class="spinner hidden"></div>
+                        </button>
+                    </form>
+
+                    <div id="result-container" class="result hidden">
+                        <div class="result-header">
+                            <div class="result-status">● Prediction Complete</div>
+                        </div>
+                        <div class="result-body">
+                            <div class="result-metric">
+                                <div class="result-label">Predicted Sales</div>
+                                <div class="result-value" id="prediction-value">—</div>
+                                <div class="result-unit">units · November 2015</div>
+                            </div>
+                            <div class="result-meta">
+                                <div class="meta-item">
+                                    <span>Shop ID</span>
+                                    <span id="result-shop">—</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span>Item ID</span>
+                                    <span id="result-item">—</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span>Model</span>
+                                    <span>XGBoost</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="error-container" class="error-box hidden">
+                        <span class="error-icon">⚠</span>
+                        <p id="error-message"></p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-card">
+            <div class="loading-rings">
+                <div class="ring ring-1"></div>
+                <div class="ring ring-2"></div>
+                <div class="ring ring-3"></div>
+                <div class="ring-icon">⚡</div>
+            </div>
+            <div class="loading-title">Running Model</div>
+            <div id="loading-msg" class="loading-msg">Retrieving features...</div>
+            <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="predict-footer">
+        <span>© Designed &amp; Developed by <b style="color:#2563eb;">Pranav</b> · 2026</span>
+    </footer>
+
+    <script src="/predict.js"></script>
+</body>
+</html>

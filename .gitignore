@@ -1,0 +1,22 @@
+# Large raw data files — not needed at runtime
+data/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Model files ARE committed — needed for inference
+# xgboost_model.pkl  <-- keep in repo
+# X_test.pkl         <-- keep in repo

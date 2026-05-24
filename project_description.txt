@@ -1,0 +1,219 @@
+PROJECT DESCRIPTION: Multi-Store Sales Forecasting System
+==========================================================
+
+
+PROJECT OVERVIEW
+----------------
+
+SalesCast is an end-to-end machine learning system that predicts future retail product sales using historical transactional data. The project was built on the Kaggle "Predict Future Sales" competition dataset (provided by 1C Company, a major Russian software and retail company). The goal is to forecast the total units sold per shop-item pair for November 2015 (month 34 in the dataset), using the prior 34 months of daily sales data.
+
+The project covers the full ML lifecycle — from raw data ingestion and feature engineering, to model training, serialisation, REST API serving, and a production-grade web frontend.
+
+
+DATASET
+-------
+
+Source: Kaggle Competition — "Predict Future Sales" by 1C Company
+URL: https://www.kaggle.com/competitions/predict-future-sales
+
+Files used:
+  - sales_train.csv      : ~2.9M rows of daily sales transactions (Jan 2013 - Oct 2015)
+  - items.csv            : 22,170 unique items with item names and category IDs
+  - item_categories.csv  : 84 item categories
+  - shops.csv            : 60 shop locations with Cyrillic shop names
+  - test.csv             : 214,200 shop-item pairs to predict for November 2015
+
+Key fields: date, shop_id, item_id, item_price, item_cnt_day (daily sales count)
+Scale: 60 shops, 22,170 items, 34 months of history
+
+
+TECH STACK
+----------
+
+Layer                | Technology
+---------------------|------------------------------------------
+Language             | Python 3.11
+ML Model             | XGBoost (XGBRegressor)
+Data Processing      | Pandas, NumPy
+Feature Engineering  | Scikit-learn (LabelEncoder, train/test split)
+Fuzzy Matching       | FuzzyWuzzy + python-Levenshtein
+Visualisation        | Matplotlib, Seaborn
+Backend API          | Flask + Flask-CORS
+Model Serialisation  | Python Pickle
+Frontend             | Vanilla HTML5, CSS3, JavaScript (ES6+)
+Typography           | Google Fonts (Inter)
+
+
+HOW IT WAS BUILT
+----------------
+
+Step 1: Exploratory Data Analysis & Cleaning
+
+  - Removed extreme outliers in item_cnt_day (> 900 units/day) and item_price (> 300,000 RUB)
+  - Used fuzzy string matching (FuzzyWuzzy, token set ratio >= 80) to detect and merge
+    near-duplicate shop names (e.g. "Якутск" vs "!Якутск")
+  - Corrected category name inconsistencies involving "PC" prefixes
+  - Checked that no shops had zero total sales in the last training month (month 33)
+
+
+Step 2: Feature Engineering
+
+This is the most critical part of the project. The raw data is daily; the model predicts
+at a monthly, per-shop-item level. Features were engineered as follows:
+
+  AGGREGATION:
+  - Aggregated item_cnt_day -> item_cnt_month per (date_block_num, shop_id, item_id)
+  - Built a full Cartesian product matrix of all shop-item combinations per month
+    (ensuring zero-sale rows are present, not just rows with sales)
+
+  LAG FEATURES (Time Series Memory):
+  - item_cnt_month lagged by 1, 2, and 3 months
+  - These encode: "how much did this item sell last month / 2 months ago / 3 months ago?"
+
+  ROLLING MEAN FEATURES (Mean Encoding):
+  - Mean sales grouped by date_block_num (global average)
+  - Mean sales by (date, item_id) — how is this item trending across all shops?
+  - Mean sales by (date, shop_id) — how is this shop performing overall?
+  - Mean sales by (date, shop_id, item_id) — specific shop-item recent trend
+  - Mean sales by shop + item category (both split_1 and split_2 encodings)
+  - Mean sales by shop + item type
+  - Mean sales by shop + item name3 (sub-category derived from item name)
+  - Mean item price over all time (item popularity signal)
+  - Mean item price by (date, item_id) lagged by 1, 2, 3 months
+  - All rolling mean features were lagged by 1+ months to prevent data leakage.
+
+  TEXT FEATURE EXTRACTION from Item Names:
+  - Split item names on "[" and "(" to extract sub-categories (name1, name2, name3)
+  - Extracted game platform/type from name2 (e.g. "xbox 360", "ps4", "pc")
+  - Applied regex cleaning and lowercasing
+  - Label-encoded name3 and type columns
+
+  SHOP NAME PARSING:
+  - Split shop names into two word-level fields (shop_name_split_1, shop_name_split_2)
+  - Categorised low-frequency values as "other"
+  - Label-encoded both fields for use as categorical features
+
+  ITEM CATEGORY PARSING:
+  - Split item_category_name on "-" to extract parent and sub-category
+  - Label-encoded both fields
+
+
+Step 3: Train / Validation / Test Split
+
+  - Training set  : All months < 33 (months 0-32)
+  - Validation set: Month 33 (October 2015)
+  - Test set      : Month 34 (November 2015) — sourced from test.csv
+  - Target variable item_cnt_month clipped to range [0, 20] to reduce outlier impact
+
+
+Step 4: Baseline Model
+
+  A LinearRegression baseline was trained and evaluated with RMSE on the validation set,
+  establishing a performance floor before moving to XGBoost.
+
+
+Step 5: XGBoost Model
+
+  XGBRegressor(
+      max_depth=10,
+      n_estimators=100,
+      min_child_weight=0.5,
+      colsample_bytree=0.8,
+      subsample=0.8,
+      eta=0.1,
+      eval_metric="rmse",
+      early_stopping_rounds=20
+  )
+
+  - Trained on months 0-32, validated on month 33
+  - Validation RMSE ~0.96 (lower is better; competition metric is RMSE)
+  - Early stopping was applied to prevent overfitting
+  - Predictions are clipped to [0, 20] post-inference
+
+
+Step 6: Model Serialisation
+
+  - The trained XGBoost model was saved as xgboost_model.pkl using Python's pickle module
+  - The pre-computed test feature matrix X_test.pkl was saved alongside it using
+    pandas.DataFrame.to_pickle()
+
+
+BACKEND API (Flask)
+-------------------
+
+A lightweight REST API was built in Flask:
+
+  GET  /              — Serves the home page (index.html)
+  GET  /predict.html  — Serves the forecasting tool page
+  POST /api/predict   — Accepts { shop_id, item_id }, looks up the pre-computed features
+                        from X_test.pkl, runs model.predict(), clips the result to [0, 20],
+                        and returns { shop_id, item_id, predicted_sales }
+
+The model and test features are loaded into memory once at server startup for fast inference.
+
+
+FRONTEND WEB APPLICATION
+-------------------------
+
+A two-page, production-grade web app was built using only HTML, CSS, and vanilla JavaScript
+(no frameworks):
+
+  Home Page (/):
+  - Full-width product landing page (inspired by SaaS dashboards)
+  - Navbar, hero section with live chart preview, stats bar (60 shops, 22K+ items, RMSE)
+  - "How It Works" section with 3-step explanation
+  - Valid IDs reference section
+  - CTA section + footer
+
+  Forecast Tool (/predict.html):
+  - Two-panel layout: info sidebar + form panel
+  - Input validation for Shop ID and Item ID
+  - 3-5 second animated loading overlay with concentric spinning rings, cycling status
+    messages, and a progress bar animation
+  - Prediction result card showing: predicted units, shop ID, item ID, model used
+  - Error handling with clear user feedback
+
+
+KEY ML CONCEPTS DEMONSTRATED
+------------------------------
+
+  - Time Series Feature Engineering: lag features, rolling means, mean encoding
+  - Cartesian product matrix for handling zero-sale combinations
+  - Target clipping to handle outlier targets
+  - Label Encoding of high-cardinality categorical features
+  - Early Stopping in gradient boosting to prevent overfitting
+  - Data leakage prevention — all mean-encoded features are lagged before merging
+  - Model serialisation and REST API deployment
+
+
+RESULTS
+-------
+
+  Model                          | Validation RMSE
+  -------------------------------|----------------
+  Linear Regression (baseline)   | ~1.20
+  XGBoost (with full feature set)| ~0.96
+
+
+RESUME BULLET POINTS (SUGGESTED)
+----------------------------------
+
+- Built a full-stack ML forecasting system that predicts monthly product sales for 60 retail
+  stores across 22,000+ items using XGBoost, achieving a validation RMSE of ~0.96 on the
+  Kaggle "Predict Future Sales" dataset.
+
+- Engineered 30+ features from 2.9M rows of daily transactional data, including multi-step
+  lag features, rolling mean encodings, text-derived item sub-categories, and shop/category
+  hierarchical encodings to maximise time series signal.
+
+- Deployed a production-grade REST API using Flask, with model inference served from a
+  pickle-serialised XGBoost model, and a full responsive web frontend built in HTML/CSS/JS
+  featuring animated loading states and result cards.
+
+- Applied advanced data cleaning techniques including fuzzy string matching (FuzzyWuzzy)
+  to detect near-duplicate shop names, regex-based item name parsing, and outlier removal
+  to improve data quality before modelling.
+
+
+----------------------------------------------------------
+Designed & Developed by Pranav | 2026

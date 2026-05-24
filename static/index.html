@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SalesCast — AI-Powered Sales Forecasting</title>
+    <meta name="description" content="Predict future product sales using an advanced XGBoost model trained on historical retail data from 1C Company.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/home.css">
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav class="navbar">
+        <div class="nav-inner">
+            <div class="nav-logo">SalesCast<span class="logo-dot">.</span></div>
+            <a href="/predict.html" class="nav-cta">Launch App →</a>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="badge">Machine Learning · XGBoost · Time Series</div>
+            <h1 class="hero-title">Predict Retail Sales<br>Before They Happen</h1>
+            <p class="hero-sub">
+                SalesCast uses a battle-tested XGBoost model trained on 34 months of historical transactional data from 60 shops and over 22,000 items to forecast next-month unit sales with high accuracy.
+            </p>
+            <div class="hero-actions">
+                <a href="/predict.html" class="btn-primary">Try the Forecast Tool</a>
+                <a href="#how-it-works" class="btn-ghost">See how it works</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <div class="stat-value">60+</div>
+                    <div class="stat-label">Shops</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <div class="stat-value">22K+</div>
+                    <div class="stat-label">Products</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <div class="stat-value">34</div>
+                    <div class="stat-label">Months of Data</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <div class="stat-value">~0.96</div>
+                    <div class="stat-label">Validation RMSE</div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Sales Forecast — Shop 5 · Item 5037</span>
+                    <span class="chart-badge live">● Live</span>
+                </div>
+                <div class="chart-bars">
+                    <div class="bar-wrap"><div class="bar" style="height:40%"></div><div class="bar-label">Aug</div></div>
+                    <div class="bar-wrap"><div class="bar" style="height:60%"></div><div class="bar-label">Sep</div></div>
+                    <div class="bar-wrap"><div class="bar" style="height:48%"></div><div class="bar-label">Oct</div></div>
+                    <div class="bar-wrap predicted"><div class="bar bar-predicted" style="height:55%"></div><div class="bar-label">Nov ★</div></div>
+                </div>
+                <div class="chart-footer">
+                    <span>Predicted: <b>0.42 units</b></span>
+                    <span>November 2015</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section" id="how-it-works">
+        <div class="section-inner">
+            <div class="section-label">How It Works</div>
+            <h2 class="section-title">From data to prediction in seconds</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">01</div>
+                    <h3>Enter Shop & Item ID</h3>
+                    <p>Provide a valid Shop ID (0–59) and Item ID from the 1C Company dataset. These uniquely identify a store location and product.</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step">
+                    <div class="step-number">02</div>
+                    <h3>Feature Lookup</h3>
+                    <p>The backend instantly retrieves pre-computed lag features, moving averages, and encoded metadata for that exact shop-item pair.</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step">
+                    <div class="step-number">03</div>
+                    <h3>XGBoost Inference</h3>
+                    <p>Our trained XGBoost model processes the features and returns a clipped sales prediction for November 2015 in milliseconds.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VALID IDs -->
+    <section class="section section-dark" id="valid-ids">
+        <div class="section-inner">
+            <div class="section-label">Reference</div>
+            <h2 class="section-title">Valid inputs to get started</h2>
+            <p class="section-desc">The model was trained on specific shop-item pairs from the Kaggle competition dataset. Use any combination below:</p>
+            <div class="id-tables">
+                <div class="id-table">
+                    <div class="id-table-title">Valid Shop IDs</div>
+                    <div class="id-chips">
+                        <span class="chip">2</span><span class="chip">3</span><span class="chip">4</span>
+                        <span class="chip chip-highlight">5</span><span class="chip">6</span><span class="chip">7</span>
+                        <span class="chip">10</span><span class="chip">12</span><span class="chip">14</span>
+                        <span class="chip">15</span><span class="chip">16</span><span class="chip">18</span>
+                        <span class="chip">19</span><span class="chip">21</span><span class="chip">22</span>
+                        <span class="chip">24</span><span class="chip">25</span><span class="chip">26</span>
+                        <span class="chip">28</span><span class="chip">31</span><span class="chip">34</span>
+                        <span class="chip">35</span><span class="chip">36</span><span class="chip">37</span>
+                        <span class="chip">38</span><span class="chip">39</span><span class="chip">41</span>
+                        <span class="chip">42</span><span class="chip">44</span><span class="chip">45</span>
+                        <span class="chip">46</span><span class="chip">47</span><span class="chip">48</span>
+                        <span class="chip">49</span><span class="chip">50</span><span class="chip">52</span>
+                        <span class="chip">53</span><span class="chip">55</span><span class="chip">56</span>
+                        <span class="chip">57</span><span class="chip">58</span><span class="chip">59</span>
+                    </div>
+                </div>
+                <div class="id-table">
+                    <div class="id-table-title">Sample Item IDs (5,100 total)</div>
+                    <div class="id-chips">
+                        <span class="chip chip-highlight">5037</span><span class="chip">5320</span>
+                        <span class="chip">5233</span><span class="chip">4806</span>
+                        <span class="chip">4843</span><span class="chip">4607</span>
+                        <span class="chip">30</span><span class="chip">31</span>
+                        <span class="chip">32</span><span class="chip">64</span>
+                        <span class="chip">67</span><span class="chip">70</span>
+                        <span class="chip">464</span><span class="chip">560</span>
+                        <span class="chip">787</span><span class="chip">839</span>
+                        <span class="chip">978</span><span class="chip">982</span>
+                        <span class="chip">1077</span><span class="chip">1233</span>
+                        <span class="chip">1413</span><span class="chip">1730</span>
+                        <span class="chip">1741</span><span class="chip">1788</span>
+                        <span class="chip">9355</span><span class="chip">9414</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section cta-section">
+        <div class="section-inner cta-inner">
+            <h2>Ready to make a prediction?</h2>
+            <p>Open the forecasting tool and get an instant sales estimate for any shop-item pair.</p>
+            <a href="/predict.html" class="btn-primary btn-large">Launch Forecast Tool →</a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <span class="nav-logo">SalesCast<span class="logo-dot">.</span></span>
+            <span>Built with XGBoost · Flask · Kaggle Dataset</span>
+            <span>© Designed &amp; Developed by <b style="color:#2563eb;">Pranav</b> · 2026</span>
+        </div>
+    </footer>
+
+</body>
+</html>
